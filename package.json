@@ -1,6 +1,6 @@
 {
   "name": "@schedulino/lambda-dynamodb",
-  "version": "0.0.1",
+  "version": "0.0.4",
   "description": "The light wrapper around aws-sdk dynamodb.",
   "license": "MIT",
   "main": "dist/index.js",
@@ -31,6 +31,8 @@
     "pretest": "npm run lint",
     "postmerge": "npm install",
     "precommit-msg": "echo 'Pre-commit checks...' && exit 0",
+    "audit": "nsp check --output summary",
+    "missing": "npm ls --depth 1",
     "release": "npm run build && release-it -n -i patch && npm publish . --access public",
     "release:minor": "npm run build && release-it -n -i minor && npm publish . --access public",
     "release:major": "npm run build && release-it -n -i major && npm publish . --access public"
@@ -42,14 +44,17 @@
   ],
   "pre-commit": [
     "precommit-msg",
-    "lint"
+    "lint",
+    "audit",
+    "missing"
   ],
   "dependencies": {
     "boom": "4.2.0",
     "node-uuid": "1.4.7",
-    "@schedulino/lambda-logger": "^0.0.9"
+    "@schedulino/lambda-logger": "^0.0.11"
   },
   "devDependencies": {
+    "nsp": "2.6.2",
     "rimraf": "2.5.4",
     "release-it": "2.4.3",
     "pre-commit": "1.1.3",

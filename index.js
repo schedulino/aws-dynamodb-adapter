@@ -3,41 +3,18 @@
  * @copyright Copyright (c) 2016, Schedulino ltd.
  * @license   MIT
  */
-import AWS from 'aws-sdk';
+import AWS from 'aws-sdk'; // eslint-disable-line
 import Boom from 'boom';
 import uuid from 'node-uuid';
 import logger from '@schedulino/lambda-logger';
-
-class Internals {
-    projectionExpression(fields = '') {
-        fields = fields.split(',');
-        if(!Array.isArray(fields)) {
-            return '';
-        }
-
-        let projectionExpression = {ProjectionExpression: '', ExpressionAttributeNames: {}}, i = 0;
-        fields.forEach(field => {
-            if (i === 0) {
-                projectionExpression.ProjectionExpression  += '#' + field;
-            } else {
-                projectionExpression.ProjectionExpression  += ', #' + field;
-            }
-            projectionExpression.ExpressionAttributeNames['#' + field] = field;
-            i++;
-        });
-
-        return projectionExpression;
-    }
-}
 
 /**
  * An adapter class for dealing with a DynamoDB.
  *
  * @class DynamoDBAdapter
  */
-class DynamoDBAdapter extends Internals {
+class DynamoDBAdapter {
     constructor(tableName, schema) {
-        super();
         this.db = new AWS.DynamoDB();
         this.doc = new AWS.DynamoDB.DocumentClient({ service: this.db });
         this.tableName = tableName;
@@ -58,7 +35,7 @@ class DynamoDBAdapter extends Internals {
      * @returns {Object} promise
      */
     static listTables(params = {}) {
-        return db.listTables(params).promise();
+        return this.db.listTables(params).promise();
     }
 
     createTable(params) {
@@ -79,23 +56,27 @@ class DynamoDBAdapter extends Internals {
 
     async findOne(key, params = {}) {
         logger.debug(`DB_ACTION::get TABLE::${this.tableName} ACCOUNT::${key.accountId} ID::${key.id}`);
-        if(params.ProjectionExpression) {
-            params = Object.assign(params, this.projectionExpression(params.ProjectionExpression))
+        if (params.ProjectionExpression) {
+            params = Object.assign(
+                params, DynamoDBAdapter.projectionExpression(params.ProjectionExpression));
         }
-        params = this.extendParams({Key: key}, params);
+        params = this.extendParams({ Key: key }, params);
 
         try {
             const data = await this.doc.get(params).promise();
             // throw 404 if item doesn't exist
-            if(data.Item) {
+            if (data.Item) {
                 return data.Item;
             }
-        } catch(error) {
-            logger.error(`DB_ACTION::get TABLE::${this.tableName} ACCOUNT::${key.accountId} ID::${key.id}`, error.message);
+        } catch (error) {
+            logger.error(
+                `DB_ACTION::get TABLE::${this.tableName} ACCOUNT::${key.accountId} ID::${key.id}`,
+                error.message
+            );
             throw error;
         }
 
-        const error = this.handleError({name: 'NotFound'});
+        const error = DynamoDBAdapter.handleError({ name: 'NotFound' });
         logger.error(`DB_ACTION::get TABLE::${this.tableName} ACCOUNT::${key.accountId} ID::${key.id}`, error.message);
 
         throw error;
@@ -103,8 +84,9 @@ class DynamoDBAdapter extends Internals {
 
     async find(params = {}) {
         logger.debug(`DB_ACTION::query TABLE::${this.tableName} ACCOUNT::${params.ExpressionAttributeValues ? params.ExpressionAttributeValues[':accountId'] : ''}`);
-        if(params.ProjectionExpression) {
-            params = Object.assign(params, this.projectionExpression(params.ProjectionExpression))
+        if (params.ProjectionExpression) {
+            params = Object.assign(
+                params, DynamoDBAdapter.projectionExpression(params.ProjectionExpression));
         }
         params = this.extendParams(params);
 
@@ -114,7 +96,7 @@ class DynamoDBAdapter extends Internals {
             logger.debug('ScannedCount', data.ScannedCount);
             logger.debug('ConsumedCapacity', data.ConsumedCapacity);
             return data.Items;
-        } catch(error) {
+        } catch (error) {
             logger.error(`DB_ACTION::query TABLE::${this.tableName} ACCOUNT::${params.ExpressionAttributeValues ? params.ExpressionAttributeValues[':accountId'] : ''}`, error.message);
             throw error;
         }
@@ -123,35 +105,35 @@ class DynamoDBAdapter extends Internals {
     async create(item, id = uuid.v1(), options = {}) {
         logger.debug(`DB_ACTION::create TABLE::${this.tableName} ACCOUNT::${item.accountId} ID::${id}`);
 
-        if(this.schema.id) {
+        if (this.schema.id) {
             item.id = id;
         }
-        if(this.schema.created) {
+        if (this.schema.created) {
             item.created = new Date().toISOString();
         }
-        if(this.schema.updated) {
-            if(item.created) {
+        if (this.schema.updated) {
+            if (item.created) {
                 item.updated = item.created;
             } else {
                 item.updated = new Date().toISOString();
             }
         }
-        const params = this.extendParams({Item: item}, options);
+        const params = this.extendParams({ Item: item }, options);
 
         try {
             const data = await this.doc.put(params).promise();
-            if(this.schema.id) {
+            if (this.schema.id) {
                 data.id = item.id;
             }
-            if(this.schema.updated) {
+            if (this.schema.updated) {
                 data.updated = item.updated;
             }
-            if(this.schema.created) {
+            if (this.schema.created) {
                 data.created = item.created;
             }
 
             return data;
-        } catch(error) {
+        } catch (error) {
             logger.error(`DB_ACTION::create TABLE::${this.tableName} ACCOUNT::${item.accountId} ID::${id}`, error.message);
             throw error;
         }
@@ -160,28 +142,28 @@ class DynamoDBAdapter extends Internals {
     async update(key, item, params = {}) {
         logger.debug(`DB_ACTION::update TABLE::${this.tableName} ACCOUNT::${key.accountId} ID::${key.id}`);
 
-        if(this.schema.updated) {
+        if (this.schema.updated) {
             item.updated = new Date().toISOString();
         }
-        params = this.extendParams({Item: Object.assign(item, key)}, params);
+        params = this.extendParams({ Item: Object.assign(item, key) }, params);
 
         try {
             const data = await this.doc.put(params).promise();
-            if(this.schema.updated) {
+            if (this.schema.updated) {
                 data.updated = item.updated;
             }
 
             return data;
-        } catch(error) {
+        } catch (error) {
             logger.error(`DB_ACTION::update TABLE::${this.tableName} ACCOUNT::${key.accountId} ID::${key.id}`, error.message);
-            throw this.handleError(error);
+            throw DynamoDBAdapter.handleError(error);
         }
     }
 
     async updateWithAttributes(key, item, params = {}) {
         logger.debug(`DB_ACTION::updateAttributes TABLE::${this.tableName} ACCOUNT::${key.accountId} ID::${key.id}`);
 
-        if(this.schema.updated) {
+        if (this.schema.updated) {
             item.updated = new Date().toISOString();
         }
 
@@ -198,49 +180,54 @@ class DynamoDBAdapter extends Internals {
             ExpressionAttributeValues: {}
         }, params);
 
-        let i = 0, set = 0, remove = 0, UpdateExpressionSetAction = ' ', UpdateExpressionRemoveAction = ' ';
-        Object.keys(item).forEach(valueKey => {
-            i++;
-            params.ExpressionAttributeNames['#param' + i] = valueKey;
+        let i = 0;
+        let set = 0;
+        let remove = 0;
+        let UpdateExpressionSetAction = ' ';
+        let UpdateExpressionRemoveAction = ' ';
+
+        Object.keys(item).forEach((valueKey) => {
+            i += 1;
+            params.ExpressionAttributeNames[`#param${i}`] = valueKey;
             // update an attribute
-            if(item[valueKey] !== '') {
-                set++;
-                params.ExpressionAttributeValues[':val' + i] = item[valueKey];
+            if (item[valueKey] !== '') {
+                set += 1;
+                params.ExpressionAttributeValues[`:val${i}`] = item[valueKey];
                 UpdateExpressionSetAction += set === 1 ? `SET #param${i} = :val${i}` : `, #param${i} = :val${i}`;
             } else { // delete an attribute
-                remove++;
+                remove += 1;
                 UpdateExpressionRemoveAction += remove === 1 ? `REMOVE #param${i}` : `, #param${i}`;
             }
         });
-        if(set === 0) {
+        if (set === 0) {
             delete params.ExpressionAttributeValues;
         }
         params.UpdateExpression += UpdateExpressionSetAction + UpdateExpressionRemoveAction;
 
         try {
             const data = await this.doc.update(params).promise();
-            if(this.schema.updated) {
+            if (this.schema.updated) {
                 data.updated = item.updated;
             }
             // required for batch update e.g. publish shifts
             data.id = key.id;
 
             return data;
-        } catch(error) {
+        } catch (error) {
             logger.error(`DB_ACTION::updateAttributes TABLE::${this.tableName} ACCOUNT::${key.accountId} ID::${key.id}`, error.message);
-            throw this.handleError(error);
+            throw DynamoDBAdapter.handleError(error);
         }
     }
 
     async destroy(key) {
         logger.debug(`DB_ACTION::delete TABLE::${this.tableName} ACCOUNT::${key.accountId} ID::${key.id}`);
 
-        const params = this.extendParams({Key: key});
+        const params = this.extendParams({ Key: key });
 
         try {
             return this.doc.delete(params).promise();
-        } catch(error) {
-            logger.error(`DB_ACTION::delete TABLE::${this.tableName} ACCOUNT::${item.accountId} ID::${item.id}`, error.message);
+        } catch (error) {
+            logger.error(`DB_ACTION::delete TABLE::${this.tableName} ACCOUNT::${key.accountId} ID::${key.id}`, error.message);
             throw error;
         }
     }
@@ -250,7 +237,7 @@ class DynamoDBAdapter extends Internals {
 
         try {
             return this.doc.batchWrite(params).promise();
-        } catch(error) {
+        } catch (error) {
             logger.error(`DB_ACTION::batchWrite TABLE::${this.tableName} ACCOUNT::${accountId}`, error.message);
             throw error;
         }
@@ -272,20 +259,20 @@ class DynamoDBAdapter extends Internals {
             const data = await this.doc.scan(params).promise();
 
             return data.Items;
-        } catch(error) {
+        } catch (error) {
             logger.error(`DB_ACTION::scan TABLE::${this.tableName}`, error.message);
             throw error;
         }
     }
 
     extendParams() {
-        return Object.assign(...arguments, {TableName: this.tableName, ReturnConsumedCapacity: 'INDEXES'});
+        return Object.assign(...arguments, { TableName: this.tableName, ReturnConsumedCapacity: 'INDEXES' }); // eslint-disable-line prefer-rest-params
     }
 
-    handleError(error) {
+    static handleError(error) {
         let dbError;
 
-        switch(error.name) {
+        switch (error.name) {
             case 'NotFound':
                 dbError = Boom.notFound('Requested resource not found.');
                 break;
@@ -297,6 +284,27 @@ class DynamoDBAdapter extends Internals {
         }
 
         return dbError;
+    }
+
+    static projectionExpression(fields = '') {
+        fields = fields.split(',');
+        if (!Array.isArray(fields)) {
+            return '';
+        }
+
+        let i = 0;
+        const projectionExpression = { ProjectionExpression: '', ExpressionAttributeNames: {} };
+        fields.forEach((field) => {
+            if (i === 0) {
+                projectionExpression.ProjectionExpression += `#${field}`;
+            } else {
+                projectionExpression.ProjectionExpression += `, #${field}`;
+            }
+            projectionExpression.ExpressionAttributeNames[`#${field}`] = field;
+            i += 1;
+        });
+
+        return projectionExpression;
     }
 }
 
