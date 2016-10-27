@@ -25,8 +25,8 @@ class DynamoDBAdapter {
         AWS.config.update({ region: options.region });
     }
 
-    static model(modelName, schema) {
-        return new DynamoDBAdapter(modelName.toLowerCase(), schema);
+    static model(tableName, schema) {
+        return new DynamoDBAdapter(tableName, schema);
     }
 
     /**
