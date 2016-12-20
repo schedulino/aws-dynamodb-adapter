@@ -5,7 +5,7 @@
  */
 import AWS from 'aws-sdk'; // eslint-disable-line
 import Boom from 'boom';
-import uuid from 'node-uuid';
+import uuidV1 from 'uuid/v1';
 import logger from '@schedulino/lambda-logger';
 
 /**
@@ -102,7 +102,7 @@ class DynamoDBAdapter {
         }
     }
 
-    async create(item, id = uuid.v1(), options = {}) {
+    async create(item, id = uuidV1(), options = {}) {
         logger.debug(`DB_ACTION::create TABLE::${this.tableName} ACCOUNT::${item.accountId} ID::${id}`);
 
         if (this.schema.id) {

@@ -50,7 +50,7 @@
   ],
   "dependencies": {
     "boom": "4.2.0",
-    "node-uuid": "1.4.7",
+    "uuid": "3.0.1",
     "@schedulino/lambda-logger": "^0.0.11"
   },
   "devDependencies": {
