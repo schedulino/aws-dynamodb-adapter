@@ -8,8 +8,6 @@
         "node": true
     },
     "rules": {
-        "generator-star-spacing": 0,
-        "babel/generator-star-spacing": 1,
         "indent": [2, 4, {"SwitchCase": 1}],
         "comma-dangle": [2, "never"],
         "no-param-reassign": 0,

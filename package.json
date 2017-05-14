@@ -1,6 +1,6 @@
 {
   "name": "@schedulino/lambda-dynamodb",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "The light wrapper around aws-sdk dynamodb.",
   "license": "MIT",
   "main": "dist/index.js",
@@ -49,27 +49,30 @@
     "missing"
   ],
   "dependencies": {
-    "boom": "4.2.0",
+    "boom": "4.3.1",
     "uuid": "3.0.1",
-    "@schedulino/lambda-logger": "^0.0.11"
+    "@schedulino/lambda-logger": "0.0.11"
   },
   "devDependencies": {
-    "nsp": "2.6.2",
-    "rimraf": "2.5.4",
-    "release-it": "2.4.3",
-    "pre-commit": "1.1.3",
-    "eslint": "3.8.1",
-    "eslint-loader": "1.6.0",
-    "babel-eslint": "7.0.0",
-    "eslint-plugin-babel": "3.3.0",
-    "eslint-plugin-import": "2.0.1",
-    "eslint-config-airbnb-base": "9.0.0",
-    "babel-cli": "6.16.0",
-    "babel-preset-es2015-node4": "2.1.0",
-    "babel-preset-stage-2": "6.17.0"
+    "release-it": "2.7.3",
+    "babel-cli": "6.24.1",
+    "babel-core": "6.24.1",
+    "babel-eslint": "7.2.3",
+    "babel-loader": "7.0.0",
+    "babel-preset-env": "1.4.0",
+    "babel-preset-stage-2": "6.24.1",
+    "eslint": "3.19.0",
+    "eslint-config-airbnb-base": "11.1.3",
+    "eslint-loader": "1.7.1",
+    "eslint-plugin-babel": "4.1.1",
+    "eslint-plugin-import": "2.2.0",
+    "nsp": "2.6.3",
+    "pre-commit": "1.2.2",
+    "rimraf": "2.6.1",
+    "webpack": "2.5.1"
   },
   "engines": {
-    "node": ">=4.3.0",
-    "npm": ">=2.0.0"
+    "node": ">=6.10.0",
+    "npm": ">=3.0.0"
   }
 }
