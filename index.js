@@ -5,8 +5,8 @@
  */
 import AWS from 'aws-sdk'; // eslint-disable-line
 import Boom from 'boom';
+import logger from 'lambda-log';
 import uuidV1 from 'uuid/v1';
-import logger from '@schedulino/lambda-logger';
 
 /**
  * An adapter class for dealing with a DynamoDB.
