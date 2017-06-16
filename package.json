@@ -1,6 +1,6 @@
 {
   "name": "@schedulino/lambda-dynamodb",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "The light wrapper around aws-sdk dynamodb.",
   "license": "MIT",
   "main": "dist/index.js",
