@@ -1,0 +1,26 @@
+language: node_js
+
+cache:
+  directories:
+    - ~/.npm
+
+node_js:
+  - 8
+
+jobs:
+  include:
+    - stage: lint
+      script: npm run check
+      skip_cleanup: true
+    - stage: test
+      script: npm run test:prod
+      skip_cleanup: true
+    - stage: release
+      node_js: lts/*
+      script: npm run build
+      deploy:
+        provider: script
+        skip_cleanup: true
+        script:
+          - npx semantic-release
+      if: branch = master
