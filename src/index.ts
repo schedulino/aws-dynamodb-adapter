@@ -23,9 +23,10 @@ const logger = new LambdaLog({
  * An adapter class for dealing with a DynamoDB.
  */
 export class DynamoDBAdapter {
+  protected readonly tableName: string;
+
   private readonly db: DynamoDB;
   private readonly doc: DocumentClient;
-  private readonly tableName: string;
   private readonly schema: Schema;
 
   static config(options: ConfigurationOptions) {

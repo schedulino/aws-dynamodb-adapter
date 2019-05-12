@@ -1,5 +1,7 @@
 # lambda-dynamodb
 
+[![Build Status](https://travis-ci.org/schedulino/lambda-dynamodb.svg?branch=master)](https://travis-ci.org/schedulino/lambda-dynamodb)
+
 The light wrapper around aws-sdk DynamoDB.
 
 ## NPM scripts
