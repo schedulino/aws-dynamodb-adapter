@@ -163,7 +163,7 @@ export class DynamoDBAdapter {
       throw error;
     }
 
-    const error = DynamoDBAdapter.handleError(new AWSError('NotFound'));
+    const error = DynamoDBAdapter.handleError({ name: 'NotFound' } as AWSError);
     logger.error(
       `DB_ACTION::get TABLE::${this.tableName} ACCOUNT::${key.accountId} ID::${
         key.id

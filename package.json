@@ -43,7 +43,7 @@
     "test": "jest --config jestconfig.json",
     "test:coverage": "npm run test -- --coverage",
     "test:watch": "npm run test:coverage -- --watch",
-    "test:prod": "npm run test:coverage -- --no-cache",
+    "test:ci": "npm run test:coverage -- --no-cache --ci --colors",
     "semantic-release": "semantic-release"
   },
   "husky": {

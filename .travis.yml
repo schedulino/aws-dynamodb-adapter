@@ -13,7 +13,7 @@ jobs:
       script: npm run check
       skip_cleanup: true
     - stage: test
-      script: npm run test:prod
+      script: npm run test:ci
       skip_cleanup: true
     - stage: release
       node_js: lts/*
