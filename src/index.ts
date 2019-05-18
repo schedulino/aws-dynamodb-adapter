@@ -26,10 +26,10 @@ const logger = new LambdaLog({
  */
 export class DynamoDBAdapter {
   readonly tableName: string;
+  readonly schema: Schema;
 
   private readonly db: DynamoDB;
   private readonly doc: DocumentClient;
-  private readonly schema: Schema;
 
   static config(options: ConfigurationOptions) {
     AWS.config.update({ region: options.region });
@@ -102,7 +102,13 @@ export class DynamoDBAdapter {
   }
 
   constructor(tableName: string, schema?: Schema) {
-    this.db = new DynamoDB();
+    // depends on serverless-offline plugion which adds IS_OFFLINE to process.env when running offline
+    const options = {
+      region: 'localhost',
+      endpoint: 'http://localhost:8000',
+    };
+
+    this.db = process.env.IS_OFFLINE ? new DynamoDB(options) : new DynamoDB();
     this.doc = new DynamoDB.DocumentClient({ service: this.db });
     this.tableName = tableName;
     this.schema = schema;
@@ -176,7 +182,7 @@ export class DynamoDBAdapter {
 
   async find(
     originParams: DocumentClient.QueryInput
-  ): Promise<DocumentClient.AttributeMap | undefined> {
+  ): Promise<DocumentClient.ItemList | undefined> {
     logger.debug(
       `DB_ACTION::query TABLE::${this.tableName} ACCOUNT::${
         originParams.ExpressionAttributeValues
