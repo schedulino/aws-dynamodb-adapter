@@ -173,8 +173,7 @@ export class DynamoDBAdapter {
     logger.error(
       `DB_ACTION::get TABLE::${this.tableName} ACCOUNT::${key.accountId} ID::${
         key.id
-      }`,
-      error.message
+      } ${error.message}`
     );
 
     throw error;
@@ -204,8 +203,8 @@ export class DynamoDBAdapter {
 
     try {
       const data = await this.doc.query(params).promise();
-      logger.debug('Count', data.Count);
-      logger.debug('ScannedCount', data.ScannedCount);
+      logger.debug(`Count ${data.Count}`);
+      logger.debug(`ScannedCount ${data.ScannedCount}`);
       logger.debug('ConsumedCapacity', data.ConsumedCapacity);
       return data.Items;
     } catch (error) {
