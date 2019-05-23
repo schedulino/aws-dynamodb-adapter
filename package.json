@@ -37,7 +37,7 @@
     "lint": "tslint -t stylish --project tsconfig.json",
     "lint:fix": "npm run lint -- --fix",
     "check": "npm run lint && npm run prettier:check",
-    "prettier:base-files": "prettier --single-quote --trailing-comma es5 ./src/**/*.ts",
+    "prettier:base-files": "prettier --single-quote --trailing-comma es5 '{src,test}/**/*.ts'",
     "prettier:check": "npm run prettier:base-files -- -l",
     "prettier:fix": "npm run prettier:base-files -- --write",
     "test": "jest --config jestconfig.json",
@@ -51,7 +51,7 @@
       "pre-commit": "lint-staged",
       "prepare-commit-msg": "exec < /dev/tty && git cz --hook",
       "pre-push": "npm run test:ci",
-      "post-merge": "npm install"
+      "post-merge": "npm ci"
     }
   },
   "lint-staged": {

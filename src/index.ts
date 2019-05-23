@@ -9,10 +9,14 @@ import { ConfigurationOptions } from 'aws-sdk/lib/config';
 import { DocumentClient } from 'aws-sdk/lib/dynamodb/document_client';
 import { PromiseResult } from 'aws-sdk/lib/request';
 import { LambdaLog } from 'lambda-log';
-import { v1 as uuidV1 } from 'uuid';
+import { v1, v4 } from 'uuid';
+
+export const uuidV1 = v1;
+export const uuidV4 = v4;
 
 export type PutItemInput = DocumentClient.PutItemInput;
 export type QueryInput = DocumentClient.QueryInput;
+export type UpdateItemInput = DocumentClient.UpdateItemInput;
 export type Schema =
   | { [key: string]: DocumentClient.AttributeValue }
   | undefined;
@@ -318,21 +322,20 @@ export class DynamoDBAdapter {
   }
 
   async updateWithAttributes(
-    key: DocumentClient.Key,
-    item: DocumentClient.PutItemInputAttributeMap,
-    originParams: DocumentClient.UpdateItemInput
+    originParams: DocumentClient.UpdateItemInput,
+    item: DocumentClient.PutItemInputAttributeMap
   ): Promise<DocumentClient.AttributeMap> {
     logger.debug(
       `DB_ACTION::updateAttributes TABLE::${this.tableName} ACCOUNT::${
-        key.accountId
-      } ID::${key.id}`
+        originParams.Key.accountId
+      } ID::${originParams.Key.id}`
     );
 
     if (this.schema && this.schema.updated) {
       item.updated = new Date().toISOString();
     }
 
-    const keys = Object.keys(key);
+    const keys = Object.keys(originParams.Key);
     keys.forEach(k => {
       if (item[k]) {
         delete item[k];
@@ -341,7 +344,6 @@ export class DynamoDBAdapter {
     const params = DynamoDBAdapter.extendParams<DocumentClient.UpdateItemInput>(
       {
         ...originParams,
-        Key: key,
         UpdateExpression: '',
         ExpressionAttributeNames: {},
         ExpressionAttributeValues: {},
@@ -388,14 +390,14 @@ export class DynamoDBAdapter {
         respondData.updated = item.updated;
       }
       // required for batch update e.g. publish shifts
-      respondData.id = key.id;
+      respondData.id = originParams.Key.id;
 
       return respondData;
     } catch (error) {
       logger.error(
         `DB_ACTION::updateAttributes TABLE::${this.tableName} ACCOUNT::${
-          key.accountId
-        } ID::${key.id}`,
+          originParams.Key.accountId
+        } ID::${originParams.Key.id}`,
         error.message
       );
       throw DynamoDBAdapter.handleError(error);
