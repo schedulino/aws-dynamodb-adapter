@@ -14,6 +14,11 @@ import { v1, v4 } from 'uuid';
 export const uuidV1 = v1;
 export const uuidV4 = v4;
 
+export interface CreateItemOutput {
+  id?: string;
+  created?: string;
+  updated?: string;
+}
 export type PutItemInput = DocumentClient.PutItemInput;
 export type QueryInput = DocumentClient.QueryInput;
 export type UpdateItemInput = DocumentClient.UpdateItemInput;
@@ -228,7 +233,7 @@ export class DynamoDBAdapter {
     item: DocumentClient.PutItemInputAttributeMap,
     itemId?: string,
     options?: DocumentClient.PutItemInput
-  ): Promise<DocumentClient.AttributeMap> {
+  ): Promise<CreateItemOutput> {
     const id = itemId || uuidV1();
     logger.debug(
       `DB_ACTION::create TABLE::${this.tableName} ACCOUNT::${
@@ -257,7 +262,7 @@ export class DynamoDBAdapter {
     try {
       await this.doc.put(params).promise();
 
-      const respondData: DocumentClient.AttributeMap = {};
+      const respondData: CreateItemOutput = {};
       if (this.schema && this.schema.id) {
         respondData.id = item.id;
       }
