@@ -21,7 +21,9 @@ export interface CreateItemOutput {
 }
 export type PutItemInput = DocumentClient.PutItemInput;
 export type QueryInput = DocumentClient.QueryInput;
+export type GetItemInput = DocumentClient.GetItemInput;
 export type UpdateItemInput = DocumentClient.UpdateItemInput;
+export type Key = DocumentClient.Key;
 export type Schema =
   | { [key: string]: DocumentClient.AttributeValue }
   | undefined;
@@ -141,10 +143,10 @@ export class DynamoDBAdapter {
     return this.db.deleteTable(params).promise();
   }
 
-  async findOne(
+  async findOne<T>(
     key: DocumentClient.Key,
     originParams?: DocumentClient.GetItemInput
-  ): Promise<DocumentClient.AttributeMap> {
+  ): Promise<T> {
     logger.debug(
       `DB_ACTION::get TABLE::${this.tableName} ACCOUNT::${key.accountId} ID::${
         key.id
@@ -166,7 +168,7 @@ export class DynamoDBAdapter {
       const data = await this.doc.get(params).promise();
       // throw 404 if item doesn't exist
       if (data.Item) {
-        return data.Item;
+        return data.Item as T;
       }
     } catch (error) {
       logger.error(
@@ -230,32 +232,31 @@ export class DynamoDBAdapter {
   }
 
   async create(
-    item: DocumentClient.PutItemInputAttributeMap,
-    itemId?: string,
-    options?: DocumentClient.PutItemInput
+    item: DocumentClient.PutItemInput,
+    itemId?: string
   ): Promise<CreateItemOutput> {
     const id = itemId || uuidV1();
     logger.debug(
       `DB_ACTION::create TABLE::${this.tableName} ACCOUNT::${
-        item.accountId
+        item.Item.accountId
       } ID::${id}`
     );
 
     if (this.schema && this.schema.id) {
-      item.id = id || uuidV1();
+      item.Item.id = id;
     }
     if (this.schema && this.schema.created) {
-      item.created = new Date().toISOString();
+      item.Item.created = new Date().toISOString();
     }
     if (this.schema && this.schema.updated) {
-      if (item.created) {
-        item.updated = item.created;
+      if (item.Item.created) {
+        item.Item.updated = item.Item.created;
       } else {
-        item.updated = new Date().toISOString();
+        item.Item.updated = new Date().toISOString();
       }
     }
     const params = DynamoDBAdapter.extendParams<DocumentClient.PutItemInput>(
-      { ...options, TableName: this.tableName, Item: item },
+      item,
       this.tableName
     );
 
@@ -264,20 +265,20 @@ export class DynamoDBAdapter {
 
       const respondData: CreateItemOutput = {};
       if (this.schema && this.schema.id) {
-        respondData.id = item.id;
+        respondData.id = item.Item.id;
       }
       if (this.schema && this.schema.updated) {
-        respondData.updated = item.updated;
+        respondData.updated = item.Item.updated;
       }
       if (this.schema && this.schema.created) {
-        respondData.created = item.created;
+        respondData.created = item.Item.created;
       }
 
       return respondData;
     } catch (error) {
       logger.error(
         `DB_ACTION::create TABLE::${this.tableName} ACCOUNT::${
-          item.accountId
+          item.Item.accountId
         } ID::${id}`,
         error.message
       );
@@ -286,23 +287,19 @@ export class DynamoDBAdapter {
   }
 
   async update(
-    key: DocumentClient.Key,
-    originParams: DocumentClient.PutItemInput
+    item: DocumentClient.PutItemInput
   ): Promise<DocumentClient.AttributeMap> {
     logger.debug(
       `DB_ACTION::update TABLE::${this.tableName} ACCOUNT::${
-        key.accountId
-      } ID::${key.id}`
+        item.Item.accountId
+      } ID::${item.Item.id}`
     );
 
     if (this.schema && this.schema.updated) {
-      originParams.Item.updated = new Date().toISOString();
+      item.Item.Item.updated = new Date().toISOString();
     }
     const params = DynamoDBAdapter.extendParams<DocumentClient.PutItemInput>(
-      {
-        ...originParams,
-        Item: { ...originParams.Item, ...key },
-      },
+      item,
       this.tableName
     );
 
@@ -311,15 +308,15 @@ export class DynamoDBAdapter {
 
       const respondData: DocumentClient.AttributeMap = {};
       if (this.schema && this.schema.updated) {
-        respondData.updated = originParams.Item.updated;
+        respondData.updated = item.Item.updated;
       }
 
       return respondData;
     } catch (error) {
       logger.error(
         `DB_ACTION::update TABLE::${this.tableName} ACCOUNT::${
-          key.accountId
-        } ID::${key.id}`,
+          item.Item.accountId
+        } ID::${item.Item.id}`,
         error.message
       );
       throw DynamoDBAdapter.handleError(error);
@@ -348,10 +345,12 @@ export class DynamoDBAdapter {
     });
     const params = DynamoDBAdapter.extendParams<DocumentClient.UpdateItemInput>(
       {
+        ...{
+          UpdateExpression: '',
+          ExpressionAttributeNames: {},
+          ExpressionAttributeValues: {},
+        },
         ...originParams,
-        UpdateExpression: '',
-        ExpressionAttributeNames: {},
-        ExpressionAttributeValues: {},
       },
       this.tableName
     );
