@@ -19,6 +19,12 @@ export interface CreateItemOutput {
   created?: string;
   updated?: string;
 }
+
+export interface UpdateItemOutput {
+  id?: string;
+  updated?: string;
+}
+
 export type PutItemInput = DocumentClient.PutItemInput;
 export type QueryInput = DocumentClient.QueryInput;
 export type GetItemInput = DocumentClient.GetItemInput;
@@ -185,9 +191,7 @@ export class DynamoDBAdapter {
     throw error;
   }
 
-  async find(
-    originParams: DocumentClient.QueryInput
-  ): Promise<DocumentClient.ItemList | undefined> {
+  async find<T>(originParams: DocumentClient.QueryInput): Promise<T[]> {
     logger.debug(
       `DB_ACTION::query TABLE::${this.tableName} ACCOUNT::${
         originParams.ExpressionAttributeValues
@@ -214,7 +218,7 @@ export class DynamoDBAdapter {
       logger.debug(`Count ${data.Count}`);
       logger.debug(`ScannedCount ${data.ScannedCount}`);
       logger.debug('ConsumedCapacity', data.ConsumedCapacity);
-      return data.Items;
+      return (data.Items || []) as T[];
     } catch (error) {
       logger.error(
         `DB_ACTION::query TABLE::${this.tableName} ACCOUNT::${
@@ -284,9 +288,7 @@ export class DynamoDBAdapter {
     }
   }
 
-  async update(
-    item: DocumentClient.PutItemInput
-  ): Promise<DocumentClient.AttributeMap> {
+  async update(item: DocumentClient.PutItemInput): Promise<UpdateItemOutput> {
     logger.debug(
       `DB_ACTION::update TABLE::${this.tableName} ACCOUNT::${
         item.Item.accountId
@@ -306,7 +308,7 @@ export class DynamoDBAdapter {
         })
         .promise();
 
-      const respondData: DocumentClient.AttributeMap = {};
+      const respondData: UpdateItemOutput = {};
       if (this.schema && this.schema.updated) {
         respondData.updated = item.Item.updated;
       }
@@ -326,7 +328,7 @@ export class DynamoDBAdapter {
   async updateWithAttributes(
     originParams: DocumentClient.UpdateItemInput,
     item: DocumentClient.PutItemInputAttributeMap
-  ): Promise<DocumentClient.AttributeMap> {
+  ): Promise<UpdateItemOutput> {
     logger.debug(
       `DB_ACTION::updateAttributes TABLE::${this.tableName} ACCOUNT::${
         originParams.Key.accountId
@@ -387,7 +389,7 @@ export class DynamoDBAdapter {
     try {
       await this.doc.update(params).promise();
 
-      const respondData: DocumentClient.AttributeMap = {};
+      const respondData: UpdateItemOutput = {};
       if (this.schema && this.schema.updated) {
         respondData.updated = item.updated;
       }
@@ -406,9 +408,7 @@ export class DynamoDBAdapter {
     }
   }
 
-  async destroy(
-    key: DocumentClient.Key
-  ): Promise<DocumentClient.DeleteItemOutput> {
+  async destroy(key: DocumentClient.Key): Promise<void> {
     logger.debug(
       `DB_ACTION::delete TABLE::${this.tableName} ACCOUNT::${
         key.accountId
@@ -416,13 +416,14 @@ export class DynamoDBAdapter {
     );
 
     try {
-      return this.doc
+      await this.doc
         .delete({
           Key: key,
           TableName: this.tableName,
           ReturnConsumedCapacity: 'INDEXES',
         })
         .promise();
+      return;
     } catch (error) {
       logger.error(
         `DB_ACTION::delete TABLE::${this.tableName} ACCOUNT::${
