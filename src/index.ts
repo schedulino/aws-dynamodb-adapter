@@ -69,14 +69,6 @@ export class DynamoDBAdapter {
     return dbError;
   }
 
-  private static extendParams<T>(params: T, tableName: string): T {
-    return {
-      ...params,
-      TableName: tableName,
-      ReturnConsumedCapacity: 'INDEXES',
-    };
-  }
-
   private static projectionExpression(
     fields: DocumentClient.ProjectionExpression = ''
   ):
@@ -159,13 +151,16 @@ export class DynamoDBAdapter {
         ...DynamoDBAdapter.projectionExpression(params.ProjectionExpression),
       };
     }
-    params = DynamoDBAdapter.extendParams<DocumentClient.GetItemInput>(
-      { ...params, TableName: this.tableName, Key: key },
-      this.tableName
-    );
 
     try {
-      const data = await this.doc.get(params).promise();
+      const data = await this.doc
+        .get({
+          ...params,
+          TableName: this.tableName,
+          Key: key,
+          ReturnConsumedCapacity: 'INDEXES',
+        })
+        .promise();
       // throw 404 if item doesn't exist
       if (data.Item) {
         return data.Item as T;
@@ -207,13 +202,15 @@ export class DynamoDBAdapter {
         ...DynamoDBAdapter.projectionExpression(params.ProjectionExpression),
       };
     }
-    params = DynamoDBAdapter.extendParams<DocumentClient.QueryInput>(
-      params,
-      this.tableName
-    );
 
     try {
-      const data = await this.doc.query(params).promise();
+      const data = await this.doc
+        .query({
+          ...params,
+          TableName: this.tableName,
+          ReturnConsumedCapacity: 'INDEXES',
+        })
+        .promise();
       logger.debug(`Count ${data.Count}`);
       logger.debug(`ScannedCount ${data.ScannedCount}`);
       logger.debug('ConsumedCapacity', data.ConsumedCapacity);
@@ -255,13 +252,14 @@ export class DynamoDBAdapter {
         item.Item.updated = new Date().toISOString();
       }
     }
-    const params = DynamoDBAdapter.extendParams<DocumentClient.PutItemInput>(
-      item,
-      this.tableName
-    );
-
     try {
-      await this.doc.put(params).promise();
+      await this.doc
+        .put({
+          ...item,
+          TableName: this.tableName,
+          ReturnConsumedCapacity: 'INDEXES',
+        })
+        .promise();
 
       const respondData: CreateItemOutput = {};
       if (this.schema && this.schema.id) {
@@ -298,13 +296,15 @@ export class DynamoDBAdapter {
     if (this.schema && this.schema.updated) {
       item.Item.Item.updated = new Date().toISOString();
     }
-    const params = DynamoDBAdapter.extendParams<DocumentClient.PutItemInput>(
-      item,
-      this.tableName
-    );
 
     try {
-      await this.doc.put(params).promise();
+      await this.doc
+        .put({
+          ...item,
+          TableName: this.tableName,
+          ReturnConsumedCapacity: 'INDEXES',
+        })
+        .promise();
 
       const respondData: DocumentClient.AttributeMap = {};
       if (this.schema && this.schema.updated) {
@@ -343,17 +343,15 @@ export class DynamoDBAdapter {
         delete item[k];
       }
     });
-    const params = DynamoDBAdapter.extendParams<DocumentClient.UpdateItemInput>(
-      {
-        ...{
-          UpdateExpression: '',
-          ExpressionAttributeNames: {},
-          ExpressionAttributeValues: {},
-        },
-        ...originParams,
+    const params = {
+      ...{
+        UpdateExpression: '',
+        ExpressionAttributeNames: {},
+        ExpressionAttributeValues: {},
       },
-      this.tableName
-    );
+      ...originParams,
+      TableName: this.tableName,
+    };
 
     let i = 0;
     let set = 0;
@@ -417,13 +415,14 @@ export class DynamoDBAdapter {
       } ID::${key.id}`
     );
 
-    const params = DynamoDBAdapter.extendParams<DocumentClient.DeleteItemInput>(
-      { Key: key, TableName: this.tableName },
-      this.tableName
-    );
-
     try {
-      return this.doc.delete(params).promise();
+      return this.doc
+        .delete({
+          Key: key,
+          TableName: this.tableName,
+          ReturnConsumedCapacity: 'INDEXES',
+        })
+        .promise();
     } catch (error) {
       logger.error(
         `DB_ACTION::delete TABLE::${this.tableName} ACCOUNT::${
@@ -459,13 +458,14 @@ export class DynamoDBAdapter {
   ): Promise<DocumentClient.ItemList | undefined> {
     logger.debug(`DB_ACTION::scan TABLE::${this.tableName}`);
 
-    const params = DynamoDBAdapter.extendParams<DocumentClient.ScanInput>(
-      originParams,
-      this.tableName
-    );
-
     try {
-      const data = await this.doc.scan(params).promise();
+      const data = await this.doc
+        .scan({
+          ...originParams,
+          TableName: this.tableName,
+          ReturnConsumedCapacity: 'INDEXES',
+        })
+        .promise();
 
       return data.Items;
     } catch (error) {
