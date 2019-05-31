@@ -408,7 +408,7 @@ export class DynamoDBAdapter {
     }
   }
 
-  async destroy(key: DocumentClient.Key): Promise<void> {
+  async destroy(key: DocumentClient.Key): Promise<string> {
     logger.debug(
       `DB_ACTION::delete TABLE::${this.tableName} ACCOUNT::${
         key.accountId
@@ -423,7 +423,7 @@ export class DynamoDBAdapter {
           ReturnConsumedCapacity: 'INDEXES',
         })
         .promise();
-      return;
+      return '';
     } catch (error) {
       logger.error(
         `DB_ACTION::delete TABLE::${this.tableName} ACCOUNT::${
