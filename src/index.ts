@@ -296,7 +296,7 @@ export class DynamoDBAdapter {
     );
 
     if (this.schema && this.schema.updated) {
-      item.Item.Item.updated = new Date().toISOString();
+      item.Item.updated = new Date().toISOString();
     }
 
     try {
