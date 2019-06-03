@@ -84,7 +84,7 @@ export class DynamoDBAdapter {
       }
     | undefined {
     const fieldsObj = fields.split(',');
-    if (!Array.isArray(fields)) {
+    if (!Array.isArray(fieldsObj)) {
       return;
     }
 
