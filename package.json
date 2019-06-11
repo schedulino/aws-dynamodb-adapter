@@ -51,7 +51,7 @@
       "pre-commit": "lint-staged",
       "prepare-commit-msg": "exec < /dev/tty && git cz --hook",
       "pre-push": "npm run test:ci",
-      "post-merge": "npm ci"
+      "post-merge": "npm install"
     }
   },
   "lint-staged": {
