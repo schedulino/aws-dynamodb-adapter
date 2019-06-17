@@ -38,7 +38,7 @@
     "lint:fix": "npm run lint -- --fix",
     "check": "npm run lint && npm run prettier:check",
     "prettier:base-files": "prettier --single-quote --trailing-comma es5 '{src,test}/**/*.ts'",
-    "prettier:check": "npm run prettier:base-files -- -l",
+    "prettier:check": "npm run prettier:base-files -- -l -v",
     "prettier:fix": "npm run prettier:base-files -- --write",
     "test": "jest --config jestconfig.json",
     "test:coverage": "npm run test -- --coverage",
