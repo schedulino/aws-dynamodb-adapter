@@ -8,6 +8,7 @@ import AWS, { AWSError, DynamoDB } from 'aws-sdk';
 import { ConfigurationOptions } from 'aws-sdk/lib/config';
 import { DocumentClient } from 'aws-sdk/lib/dynamodb/document_client';
 import { PromiseResult } from 'aws-sdk/lib/request';
+import https from 'https';
 import { LambdaLog } from 'lambda-log';
 import { v1, v4 } from 'uuid';
 
@@ -37,6 +38,19 @@ export type Schema =
 const logger = new LambdaLog({
   debug: process.env.LOGGER_LEVEL === 'DEBUG',
 });
+/**
+ * default keep-alive - https://hackernoon.com/lambda-optimization-tip-enable-http-keep-alive-6dc503f6f114
+ * https://theburningmonk.com/2019/02/lambda-optimization-tip-enable-http-keep-alive/
+ *
+ * this should become default in aws-sdk-js v3 https://github.com/aws/aws-sdk-js/pull/2595
+ */
+const sslAgent = new https.Agent({
+  keepAlive: true,
+  maxSockets: 50,
+  rejectUnauthorized: true,
+});
+// @ts-ignore
+sslAgent.setMaxListeners(0);
 
 /**
  * An adapter class for dealing with a DynamoDB.
@@ -49,7 +63,10 @@ export class DynamoDBAdapter {
   private readonly doc: DocumentClient;
 
   static config(options: ConfigurationOptions) {
-    AWS.config.update({ region: options.region });
+    AWS.config.update({
+      region: options.region,
+      httpOptions: { agent: sslAgent },
+    });
   }
 
   static model(tableName: string, schema?: Schema) {
@@ -117,8 +134,13 @@ export class DynamoDBAdapter {
       endpoint: 'http://localhost:8000',
     };
 
-    this.db = process.env.IS_OFFLINE ? new DynamoDB(options) : new DynamoDB();
-    this.doc = new DynamoDB.DocumentClient({ service: this.db });
+    this.db = process.env.IS_OFFLINE
+      ? new DynamoDB(options)
+      : new DynamoDB({ httpOptions: { agent: sslAgent } });
+    this.doc = new DynamoDB.DocumentClient({
+      service: this.db,
+      httpOptions: { agent: sslAgent },
+    });
     this.tableName = tableName;
     this.schema = schema;
   }
@@ -146,9 +168,7 @@ export class DynamoDBAdapter {
     originParams?: DocumentClient.GetItemInput
   ): Promise<T> {
     logger.debug(
-      `DB_ACTION::get TABLE::${this.tableName} ACCOUNT::${key.accountId} ID::${
-        key.id
-      }`
+      `DB_ACTION::get TABLE::${this.tableName} ACCOUNT::${key.accountId} ID::${key.id}`
     );
     let params = originParams;
     if (params && params.ProjectionExpression) {
@@ -173,9 +193,7 @@ export class DynamoDBAdapter {
       }
     } catch (error) {
       logger.error(
-        `DB_ACTION::get TABLE::${this.tableName} ACCOUNT::${
-          key.accountId
-        } ID::${key.id}`,
+        `DB_ACTION::get TABLE::${this.tableName} ACCOUNT::${key.accountId} ID::${key.id}`,
         error.message
       );
       throw error;
@@ -183,9 +201,7 @@ export class DynamoDBAdapter {
 
     const error = DynamoDBAdapter.handleError({ name: 'NotFound' } as AWSError);
     logger.error(
-      `DB_ACTION::get TABLE::${this.tableName} ACCOUNT::${key.accountId} ID::${
-        key.id
-      } ${error.message}`
+      `DB_ACTION::get TABLE::${this.tableName} ACCOUNT::${key.accountId} ID::${key.id} ${error.message}`
     );
 
     throw error;
@@ -238,9 +254,7 @@ export class DynamoDBAdapter {
   ): Promise<CreateItemOutput> {
     const id = itemId || uuidV1();
     logger.debug(
-      `DB_ACTION::create TABLE::${this.tableName} ACCOUNT::${
-        item.Item.accountId
-      } ID::${id}`
+      `DB_ACTION::create TABLE::${this.tableName} ACCOUNT::${item.Item.accountId} ID::${id}`
     );
 
     if (this.schema && this.schema.id) {
@@ -279,9 +293,7 @@ export class DynamoDBAdapter {
       return respondData;
     } catch (error) {
       logger.error(
-        `DB_ACTION::create TABLE::${this.tableName} ACCOUNT::${
-          item.Item.accountId
-        } ID::${id}`,
+        `DB_ACTION::create TABLE::${this.tableName} ACCOUNT::${item.Item.accountId} ID::${id}`,
         error.message
       );
       throw error;
@@ -290,9 +302,7 @@ export class DynamoDBAdapter {
 
   async update(item: DocumentClient.PutItemInput): Promise<UpdateItemOutput> {
     logger.debug(
-      `DB_ACTION::update TABLE::${this.tableName} ACCOUNT::${
-        item.Item.accountId
-      } ID::${item.Item.id}`
+      `DB_ACTION::update TABLE::${this.tableName} ACCOUNT::${item.Item.accountId} ID::${item.Item.id}`
     );
 
     if (this.schema && this.schema.updated) {
@@ -316,9 +326,7 @@ export class DynamoDBAdapter {
       return respondData;
     } catch (error) {
       logger.error(
-        `DB_ACTION::update TABLE::${this.tableName} ACCOUNT::${
-          item.Item.accountId
-        } ID::${item.Item.id}`,
+        `DB_ACTION::update TABLE::${this.tableName} ACCOUNT::${item.Item.accountId} ID::${item.Item.id}`,
         error.message
       );
       throw DynamoDBAdapter.handleError(error);
@@ -330,9 +338,7 @@ export class DynamoDBAdapter {
     item: DocumentClient.PutItemInputAttributeMap
   ): Promise<UpdateItemOutput> {
     logger.debug(
-      `DB_ACTION::updateAttributes TABLE::${this.tableName} ACCOUNT::${
-        originParams.Key.accountId
-      } ID::${originParams.Key.id}`
+      `DB_ACTION::updateAttributes TABLE::${this.tableName} ACCOUNT::${originParams.Key.accountId} ID::${originParams.Key.id}`
     );
 
     if (this.schema && this.schema.updated) {
@@ -399,9 +405,7 @@ export class DynamoDBAdapter {
       return respondData;
     } catch (error) {
       logger.error(
-        `DB_ACTION::updateAttributes TABLE::${this.tableName} ACCOUNT::${
-          originParams.Key.accountId
-        } ID::${originParams.Key.id}`,
+        `DB_ACTION::updateAttributes TABLE::${this.tableName} ACCOUNT::${originParams.Key.accountId} ID::${originParams.Key.id}`,
         error.message
       );
       throw DynamoDBAdapter.handleError(error);
@@ -410,9 +414,7 @@ export class DynamoDBAdapter {
 
   async destroy(key: DocumentClient.Key): Promise<void> {
     logger.debug(
-      `DB_ACTION::delete TABLE::${this.tableName} ACCOUNT::${
-        key.accountId
-      } ID::${key.id}`
+      `DB_ACTION::delete TABLE::${this.tableName} ACCOUNT::${key.accountId} ID::${key.id}`
     );
 
     try {
@@ -426,9 +428,7 @@ export class DynamoDBAdapter {
       return;
     } catch (error) {
       logger.error(
-        `DB_ACTION::delete TABLE::${this.tableName} ACCOUNT::${
-          key.accountId
-        } ID::${key.id}`,
+        `DB_ACTION::delete TABLE::${this.tableName} ACCOUNT::${key.accountId} ID::${key.id}`,
         error.message
       );
       throw error;
