@@ -79,7 +79,7 @@
     }
   },
   "dependencies": {
-    "aws-sdk": "2.471.0",
+    "aws-sdk": "2.476.0",
     "@hapi/boom": "7.4.2",
     "lambda-log": "2.2.0",
     "uuid": "3.3.2"
@@ -87,22 +87,22 @@
   "devDependencies": {
     "@types/aws-lambda": "8.10.27",
     "@types/hapi__boom": "7.4.0",
-    "@types/jest": "24.0.13",
+    "@types/jest": "24.0.15",
     "@types/lambda-log": "2.2.0",
     "@types/uuid": "3.4.4",
     "commitizen": "3.1.1",
     "cz-conventional-changelog": "2.1.0",
-    "husky": "2.3.0",
+    "husky": "2.4.1",
     "jest": "24.8.0",
-    "lint-staged": "8.2.0",
+    "lint-staged": "8.2.1",
     "prettier": "1.18.2",
     "rimraf": "2.6.3",
-    "semantic-release": "15.13.12",
+    "semantic-release": "15.13.16",
     "ts-jest": "24.0.2",
     "tslint": "5.17.0",
     "tslint-config-airbnb": "5.11.1",
     "tslint-config-prettier": "1.18.0",
-    "typescript": "3.5.1"
+    "typescript": "3.5.2"
   },
   "files": [
     "dist/src/",
