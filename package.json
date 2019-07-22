@@ -85,7 +85,7 @@
     "uuid": "3.3.2"
   },
   "devDependencies": {
-    "@types/aws-lambda": "8.10.28",
+    "@types/aws-lambda": "8.10.30",
     "@types/hapi__boom": "7.4.0",
     "@types/jest": "24.0.15",
     "@types/lambda-log": "2.2.0",
