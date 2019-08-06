@@ -55,22 +55,13 @@
     }
   },
   "lint-staged": {
-    "linters": {
-      "*.ts": [
-        "npm run lint:fix",
-        "git add"
-      ],
-      "*.{ts,md,json}": [
-        "npm run prettier:fix",
-        "git add"
-      ]
-    },
-    "concurrent": false,
-    "relative": true,
-    "ignore": [
-      "node_modules",
-      "dist",
-      "package-lock.json"
+    "*.ts": [
+      "npm run lint:fix",
+      "git add"
+    ],
+    "*.{ts,md,json}": [
+      "npm run prettier:fix",
+      "git add"
     ]
   },
   "config": {
@@ -79,7 +70,7 @@
     }
   },
   "dependencies": {
-    "aws-sdk": "2.503.0",
+    "aws-sdk": "2.504.0",
     "@hapi/boom": "7.4.2",
     "lambda-log": "2.3.0",
     "uuid": "3.3.2"
@@ -87,11 +78,11 @@
   "devDependencies": {
     "@types/aws-lambda": "8.10.31",
     "@types/hapi__boom": "7.4.0",
-    "@types/jest": "24.0.16",
+    "@types/jest": "24.0.17",
     "@types/lambda-log": "2.2.0",
     "@types/uuid": "3.4.5",
     "commitizen": "4.0.3",
-    "cz-conventional-changelog": "2.1.0",
+    "cz-conventional-changelog": "3.0.2",
     "husky": "3.0.2",
     "jest": "24.8.0",
     "lint-staged": "9.2.1",
