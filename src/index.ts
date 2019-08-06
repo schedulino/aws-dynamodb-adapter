@@ -435,7 +435,12 @@ export class DynamoDBAdapter {
     }
   }
 
-  async destroyBatch<T>(items: T[], accountId: string, idKey = 'id') {
+  async destroyBatch<T>(
+    items: T[],
+    accountId: string,
+    rangeKey = 'id',
+    hashKey = 'accountId'
+  ) {
     logger.debug(
       `DB_ACTION::destroyAll TABLE::${this.tableName} ACCOUNT::${accountId}`
     );
@@ -446,7 +451,9 @@ export class DynamoDBAdapter {
       RequestItems: {
         [this.tableName]: array.map(item => ({
           // tslint:disable-next-line
-          DeleteRequest: { Key: { accountId, [idKey]: (item as any)[idKey] } },
+          DeleteRequest: {
+            Key: { [hashKey]: accountId, [rangeKey]: (item as any)[rangeKey] },
+          },
         })),
       },
     }));
