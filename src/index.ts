@@ -435,6 +435,35 @@ export class DynamoDBAdapter {
     }
   }
 
+  async destroyBatch<T>(items: T[], accountId: string, idKey = 'id') {
+    logger.debug(
+      `DB_ACTION::destroyAll TABLE::${this.tableName} ACCOUNT::${accountId}`
+    );
+    const chunkSize = 25; // which can comprise as many as 25 delete requests
+    const arraysOf25Items = this.chunk<T>(items, chunkSize);
+
+    const deleteParams = arraysOf25Items.map((array: T[]) => ({
+      RequestItems: {
+        [this.tableName]: array.map(item => ({
+          // tslint:disable-next-line
+          DeleteRequest: { Key: { accountId, [idKey]: (item as any)[idKey] } },
+        })),
+      },
+    }));
+
+    try {
+      for (const deleteParam of deleteParams) {
+        await this.batchWrite(deleteParam, accountId);
+      }
+    } catch (error) {
+      logger.error(
+        `DB_ACTION::destroyAll TABLE::${this.tableName} ACCOUNT::${accountId}`,
+        error.message
+      );
+      throw error;
+    }
+  }
+
   async batchWrite(
     params: DocumentClient.BatchWriteItemInput,
     accountId: string
@@ -473,5 +502,13 @@ export class DynamoDBAdapter {
       logger.error(`DB_ACTION::scan TABLE::${this.tableName}`, error.message);
       throw error;
     }
+  }
+
+  private chunk<T>(array: T[], size: number): T[][] {
+    return array
+      .map(({}, i: number) =>
+        i % size === 0 ? array.slice(i, i + size) : null
+      )
+      .filter((e: T[] | null) => !!e) as T[][];
   }
 }
