@@ -450,8 +450,8 @@ export class DynamoDBAdapter {
     const deleteParams = arraysOf25Items.map((array: T[]) => ({
       RequestItems: {
         [this.tableName]: array.map(item => ({
-          // tslint:disable-next-line
           DeleteRequest: {
+            // tslint:disable-next-line
             Key: { [hashKey]: accountId, [rangeKey]: (item as any)[rangeKey] },
           },
         })),
