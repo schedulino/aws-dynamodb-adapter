@@ -244,7 +244,7 @@ export class DynamoDBAdapter {
         }`,
         error.message
       );
-      throw error;
+      throw DynamoDBAdapter.handleError(error);
     }
   }
 
@@ -296,7 +296,7 @@ export class DynamoDBAdapter {
         `DB_ACTION::create TABLE::${this.tableName} ACCOUNT::${item.Item.accountId} ID::${id}`,
         error.message
       );
-      throw error;
+      throw DynamoDBAdapter.handleError(error);
     }
   }
 
@@ -431,7 +431,7 @@ export class DynamoDBAdapter {
         `DB_ACTION::delete TABLE::${this.tableName} ACCOUNT::${key.accountId} ID::${key.id}`,
         error.message
       );
-      throw error;
+      throw DynamoDBAdapter.handleError(error);
     }
   }
 
