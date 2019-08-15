@@ -70,7 +70,7 @@
     }
   },
   "dependencies": {
-    "aws-sdk": "2.504.0",
+    "aws-sdk": "2.507.0",
     "@hapi/boom": "7.4.2",
     "lambda-log": "2.3.0",
     "uuid": "3.3.2"
@@ -83,7 +83,7 @@
     "@types/uuid": "3.4.5",
     "commitizen": "4.0.3",
     "cz-conventional-changelog": "3.0.2",
-    "husky": "3.0.2",
+    "husky": "3.0.3",
     "jest": "24.8.0",
     "lint-staged": "9.2.1",
     "prettier": "1.18.2",
