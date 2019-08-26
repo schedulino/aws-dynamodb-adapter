@@ -78,7 +78,7 @@
   "devDependencies": {
     "@types/aws-lambda": "8.10.31",
     "@types/hapi__boom": "7.4.1",
-    "@types/jest": "24.0.17",
+    "@types/jest": "24.0.18",
     "@types/lambda-log": "2.2.0",
     "@types/uuid": "3.4.5",
     "commitizen": "4.0.3",
