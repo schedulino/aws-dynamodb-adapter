@@ -89,7 +89,7 @@
     "prettier": "1.18.2",
     "rimraf": "3.0.0",
     "semantic-release": "15.13.24",
-    "ts-jest": "24.1.0",
+    "ts-jest": "24.2.0",
     "tslint": "5.20.0",
     "tslint-config-airbnb": "5.11.2",
     "tslint-config-prettier": "1.18.0",
