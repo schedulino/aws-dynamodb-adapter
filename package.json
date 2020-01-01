@@ -71,7 +71,7 @@
   },
   "dependencies": {
     "aws-sdk": "2.596.0",
-    "@hapi/boom": "7.4.3",
+    "@hapi/boom": "8.0.1",
     "lambda-log": "2.3.1",
     "uuid": "3.3.3"
   },
