@@ -73,7 +73,7 @@
     "aws-sdk": "2.596.0",
     "@hapi/boom": "7.4.3",
     "lambda-log": "2.3.1",
-    "uuid": "3.3.3"
+    "uuid": "3.4.0"
   },
   "devDependencies": {
     "@types/aws-lambda": "8.10.40",
